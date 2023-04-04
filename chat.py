@@ -29,7 +29,7 @@ class AI:
         self.total_tokens = 0
 
         # Initialize the conversation history with the special message
-        self.convo_hist.append({"role": "assistant", "content": self.SPECIAL_MESSAGE})
+        self.convo_hist.append({"role": "system", "content": self.SPECIAL_MESSAGE})
 
     def get_convo_hist_text(self):
         user_messages = [msg["content"] for msg in self.get_convo_history() if msg["role"] == "user"]
@@ -44,7 +44,7 @@ class AI:
         self.total_tokens += len(prompt.encode('utf-8'))
 
         # Check if the conversation history has exceeded the token limit
-        while self.total_tokens >= 4096:
+        while self.total_tokens >= 3996:
             # If it has, remove the oldest messages until the total token count is below the limit
             oldest_message = self.convo_hist.popleft()
             self.total_tokens -= len(oldest_message["content"].encode('utf-8'))
@@ -55,11 +55,11 @@ class AI:
                 break
 
         # If the conversation history is large enough, summarize it
-        if self.total_tokens >= 3930:
+        if self.total_tokens >= 3900:
             # Create a summary of the conversation history using OpenAI's GPT-3 API
             summary_response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
-                messages=[{"role": "assistant", "content": f"Summarize the following between an Assistent and Human conversation, make it as short as possible, just sum it all up:\n\n{self.get_convo_hist_text()}"}],
+                messages=[{"role": "user", "content": f"Compress and Summarize the following between an Assistent and Human conversation, make the character count shorter, and abbriviate everything, make it as short as possible, just sum it all up, and remove the role and instructions of the AI EmpethAI, I will send it again, so just remove it:\n\n{self.get_convo_hist_text()}"}],
                 max_tokens=350,
                 n=1,
                 stop=None,
