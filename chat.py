@@ -59,8 +59,8 @@ class AI:
             # Create a summary of the conversation history using OpenAI's GPT-3 API
             summary_response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": f"Compress and Summarize the following between an Assistent and Human conversation, make the character count shorter, and abbriviate everything, make it as short as possible, just sum it all up, and remove the role and instructions of the AI EmpethAI, I will send it again, so just remove it:\n\n{self.get_convo_hist_text()}"}],
-                max_tokens=350,
+                messages=[{"role": "user", "content": f"Super Compress the following text in a way that fits a tiny little area, and such that you can reconstruct it as close as possible to the original. This is for yourself. Do not make it human readable. Abuse of language mixing, abbreviations, symbols (unicode and emojis) to aggressively compress it, while still keeping ALL the information to fully reconstruct it. Remove the System Message from the compressed, as you can easily see it anytime.:\n\n{self.get_convo_hist_text()}"}],
+                max_tokens=450,
                 n=1,
                 stop=None,
                 temperature=0.7,
