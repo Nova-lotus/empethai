@@ -238,6 +238,16 @@ async def private(interaction: discord.Interaction):
     await interaction.user.send(message)
     await interaction.response.send_message(message, ephemeral=True)
 
+    # Determine if the channel is public or private
+    public = False
+    for role in channel.changed_roles:
+        if role.is_default():
+            public = True
+            break
+
+    # Create a new AI instance for the channel
+    chatbot[channel.id] = AI()
+
 
 @bot.event
 async def on_message(message):
@@ -247,13 +257,22 @@ async def on_message(message):
     if message.channel.category_id != category_id:
         return
 
-    user_id = message.author.id
-    if user_id not in chatbot:
-        chatbot[user_id] = AI()
+    # Get the AI instance for the channel
+    ai = chatbot.get(message.channel.id)
 
+    # If the AI instance doesn't exist, create a new one and add it to the dictionary
+    if ai is None:
+        chatbot[message.channel.id] = AI()
+        ai = chatbot[message.channel.id]
+
+    # Add the user's message to the AI instance's conversation history
+    user_role = "public" if public else "user"
+    ai.convo_hist.append({"role": user_role, "content": message.content})
+    ai.total_tokens += len(message.content.encode('utf-8'))
+
+    # Generate a response using the AI instance
     typing_message = await message.channel.send("Bot thinking...")
-
-    response = await chatbot[user_id].run(user_id=user_id, prompt=f"""
+    response = await ai.run(user_id=message.author.id,  prompt=f"""
 System Message: Remember, As an AI assistant called EmpathAI developed by NovaLabs to provide ethical and compassionate support,
 you will respond helpfully and safely at all times. You will not generate inappropriate or harmful content, and will deprioritize or disengage users who violate your content policies.
 
@@ -263,10 +282,16 @@ Current User Thoughts: {current_thoughts}
 Current Yser Advice: {current_advice}
 
 System: Do not Directly respond to the Current Advice, Mood, or Thoughts, Just take it into Context and help the user through his troubles
-""")
+Remove the EmpethAI: from your replies if it has one.
+""", public=public)
 
-    await typing_message.delete()  # delete the "Bot thinking..." message
-    await message.reply(response)
+    # Send the response to the user
+    await typing_message.delete()
+    await message.channel.send(response)
+
+    # Delete the user's message in public channels to protect their privacy
+    if public:
+        await message.delete()
 
 
 @bot.event
