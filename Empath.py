@@ -265,10 +265,12 @@ async def on_message(message):
         chatbot[message.channel.id] = AI()
         ai = chatbot[message.channel.id]
 
-    # Add the user's message to the AI instance's conversation history
-    user_role = "public" if public else "user"
-    ai.convo_hist.append({"role": user_role, "content": message.content})
-    ai.total_tokens += len(message.content.encode('utf-8'))
+    # Determine if the channel is public or private
+    public = False
+    for role in message.channel.changed_roles:
+        if role.is_default():
+            public = True
+            break
 
     # Generate a response using the AI instance
     typing_message = await message.channel.send("Bot thinking...")
@@ -284,6 +286,19 @@ Current Yser Advice: {current_advice}
 System: Do not Directly respond to the Current Advice, Mood, or Thoughts, Just take it into Context and help the user through his troubles
 Remove the EmpethAI: from your replies if it has one.
 """, public=public)
+
+    # Add the user's message to the AI instance's conversation history
+    user_role = "public" if public else "user"
+    ai.convo_hist.append({"role": user_role, "content": message.content})
+    ai.total_tokens += len(message.content.encode('utf-8'))
+
+    # Send the response to the user
+    await typing_message.delete()
+    await message.channel.send(response)
+
+    # Delete the user's message in public channels to protect their privacy
+    if public:
+        await message.delete()
 
     # Send the response to the user
     await typing_message.delete()
