@@ -300,15 +300,6 @@ Remove the EmpethAI: from your replies if it has one.
     if public:
         await message.delete()
 
-    # Send the response to the user
-    await typing_message.delete()
-    await message.channel.send(response)
-
-    # Delete the user's message in public channels to protect their privacy
-    if public:
-        await message.delete()
-
-
 @bot.event
 async def on_ready():
     print(f'Logged into Discord as {bot.user}')
