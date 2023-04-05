@@ -70,8 +70,8 @@ class AI:
             )
 
             # Extract the summary from the response and use it as the context for the next API call
-            summary = summary_response.choices[0].text.strip()
-            context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}, {"role": "assistant", "content": f"{summary}\n{prompt}"}]
+            summary = summary_response.choices[0].message.content.strip()
+            context = [{"role": "system", "content": self.SPECIAL_MESSAGE}, {"role": "user", "content": f"{summary}\n{prompt}"}]
         else:
             # Use the full conversation history as the context for the next API call
             context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}] + list(self.convo_hist)
@@ -87,7 +87,7 @@ class AI:
                 )
 
         # Add the response to the conversation history
-        message = response.choices[0].text.strip()
+         message = response.choices[0].message.content.strip()
         self.convo_hist.append({"role": "assistant", "content": message})
         self.total_tokens += len(message.encode('utf-8'))
 
