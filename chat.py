@@ -87,7 +87,7 @@ class AI:
                 )
 
         # Add the response to the conversation history
-         message = response.choices[0].message.content.strip()
+        message = response.choices[0].message.content.strip()
         self.convo_hist.append({"role": "assistant", "content": message})
         self.total_tokens += len(message.encode('utf-8'))
 
