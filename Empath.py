@@ -294,11 +294,7 @@ Remove the EmpethAI: from your replies if it has one.
 
     # Send the response to the user
     await typing_message.delete()
-    await message.channel.send(response)
-
-    # Delete the user's message in public channels to protect their privacy
-    if public:
-        await message.delete()
+    await message.reply(response)
 
 @bot.event
 async def on_ready():
