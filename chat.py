@@ -30,6 +30,9 @@ class AI:
         # Add the special message to the conversation history
         self.convo_hist.append({"role": "system", "content": self.SPECIAL_MESSAGE})
         self.total_tokens += len(self.SPECIAL_MESSAGE.encode('utf-8'))
+	
+    async def async_sleep(duration):
+    await asyncio.sleep(duration)
 
     async def get_convo_hist_text(self, public=False):
         if public:
@@ -89,7 +92,7 @@ class AI:
 			temperature=0.7, 
 		) 
         except openai.error.TooManyRequestsError: 
-            await asyncio.sleep(0.5)
+            await async_sleep(0.5)
 
     # Add the response to the conversation history
     message = response.choices[0].message.content.strip()
