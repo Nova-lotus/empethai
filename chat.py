@@ -85,11 +85,11 @@ class AI:
                     stop=None,
                     temperature=0.7,
                 )
-        except openai.error.TooManyRequestsError as e:
+            except openai.error.TooManyRequestsError as e:
             # If we hit the API rate limit, wait for a minute before trying again
-            print(f"Rate limited. Waiting for {e.retry_after} seconds.")
-            await asyncio.sleep(e.retry_after)
-
+                print(f"Rate limited, Waiting for {e.retry_after} seconds.")
+                await asyncio.sleep(e.retry_after)
+  
         # Add the response to the conversation history
         message = response.choices[0].message.content.strip()
         self.convo_hist.append({"role": "assistant", "content": message})
