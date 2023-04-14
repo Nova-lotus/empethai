@@ -37,6 +37,39 @@ class AI:
         else:
             return "\n\n".join([msg['content'] for msg in self.convo_hist if msg['role'] != 'system'])
 
+    async def summarize_convo_hist(self):
+        # Remove the special message from the conversation history if it's present
+        if self.convo_hist[0]["content"] == self.SPECIAL_MESSAGE:
+            convo_hist = list(self.convo_hist)[1:]
+        else:
+            convo_hist = list(self.convo_hist)
+
+        # Create a summary of the conversation history using OpenAI's GPT-3 API
+        try:
+            summary_response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": f"Super Compress the following text in a way that fits a tiny little area, and such that you can reconstruct it as close as possible to the original. This is for yourself. Do not make it human readable. Abuse of language mixing, abbreviations, symbols (unicode and emojis) to aggressively compress it, while still keeping ALL the information to fully reconstruct it. Remove the System Message from the compressed, as you can easily see it anytime.:\n\n{self.get_convo_hist_text()}"}],
+                max_tokens=450,
+                n=1,
+                stop=None,
+                temperature=0.7,
+            )
+        except Exception as e:
+            print(f"Error summarizing conversation history: {e}")
+            return None
+
+        # Extract the summary from the response
+        summary = summary_response.choices[0].message.content.strip()
+
+        # Format the summary and prompt as a single message
+        message = f"{summary}\n{self.convo_hist[-1]['content']}"
+
+        # Add the summary to the conversation history
+        self.convo_hist.append({"role": "system", "content": message})
+        self.total_tokens += len(message.encode('utf-8'))
+
+        return summary
+
     async def run(self, user_id, prompt, public=False):
         # Check if the conversation history has exceeded the token limit
         while self.total_tokens >= 3996:
@@ -54,30 +87,18 @@ class AI:
 
         # If the conversation history is large enough, summarize it
         if self.total_tokens >= 3900:
-            # Remove the special message from the conversation history if it's present
-            if self.convo_hist[0]["content"] == self.SPECIAL_MESSAGE:
-                self.convo_hist.popleft()
-                self.total_tokens -= len(self.SPECIAL_MESSAGE.encode('utf-8'))
-
-            # Create a summary of the conversation history using OpenAI's GPT-3 API
-            summary_response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": f"Super Compress the following text in a way that fits a tiny little area, and such that you can reconstruct it as close as possible to the original. This is for yourself. Do not make it human readable. Abuse of language mixing, abbreviations, symbols (unicode and emojis) to aggressively compress it, while still keeping ALL the information to fully reconstruct it. Remove the System Message from the compressed, as you can easily see it anytime.:\n\n{self.get_convo_hist_text()}"}],
-                max_tokens=450,
-                n=1,
-                stop=None,
-                temperature=0.7,
-            )
-
-            # Extract the summary from the response and use it as the context for the next API call
-            summary = summary_response.choices[0].message.content.strip()
-            context = [{"role": "system", "content": self.SPECIAL_MESSAGE}, {"role": "user", "content": f"{summary}\n{prompt}"}]
+            summary = await self.summarize_convo_hist()
+            if summary:
+                context = [{"role": "system", "content": self.SPECIAL_MESSAGE}, {"role": "user", "content": f"{summary}\n{prompt}"}]
+            else:
+                context = [{"role": "system", "content": self.SPECIAL_MESSAGE}] + list(self.convo_hist)
         else:
             # Use the full conversation history as the context for the next API call
-            context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}] + list(self.convo_hist)
+            context = [{"role": "system", "content": self.SPECIAL_MESSAGE}] + list(self.convo_hist)
 
         # Generate a response using the conversation history or summary as the context
-        response = openai.ChatCompletion.create(
+        try:
+            response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=context,
                     max_tokens=350,
@@ -85,6 +106,9 @@ class AI:
                     stop=None,
                     temperature=0.7,
                 )
+        except Exception as e:
+            print(f"Error generating response: {e}")
+            return None
 
         # Add the response to the conversation history
         message = response.choices[0].message.content.strip()
