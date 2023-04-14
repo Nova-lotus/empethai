@@ -288,8 +288,7 @@ Remove the EmpethAI: from your replies if it has one.
 """, public=public)
 
     # Add the user's message to the AI instance's conversation history
-    user_role = "public" if public else "user"
-    ai.convo_hist.append({"role": user_role, "content": message.content})
+    ai.convo_hist.append({"role": "user", "content": message.content})
     ai.total_tokens += len(message.content.encode('utf-8'))
 
     # Send the response to the user
