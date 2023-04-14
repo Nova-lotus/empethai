@@ -26,8 +26,6 @@ class AI:
         self.convo_hist.append({"role": "system", "content": self.SPECIAL_MESSAGE})
         self.total_tokens += len(self.SPECIAL_MESSAGE.encode('utf-8'))
 
-    async def async_sleep(self, duration):
-        await asyncio.sleep(duration)
 
     async def get_convo_hist_text(self, public=False):
         if public:
