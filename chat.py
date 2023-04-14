@@ -78,7 +78,7 @@ class AI:
 
         # Generate a response using the conversation history or summary as the context
         response = None 
-	 while not response: 
+         while not response: 
 	    try: 
 	        response = openai.ChatCompletion.create( 
 	            model="gpt-3.5-turbo", 
