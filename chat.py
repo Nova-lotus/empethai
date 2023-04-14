@@ -78,7 +78,7 @@ class AI:
         else:
             # Use the full conversation history as the context for the next API call
             self.convo_hist = deque(maxlen=20)
-			context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}] + list(self.convo_hist)
+            context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}] + list(self.convo_hist)
 
     # Generate a response using the conversation history or summary as the context
     response = None
