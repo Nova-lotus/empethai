@@ -88,7 +88,7 @@ class AI:
 
         # Generate a response using the conversation history or summary as the context
         response = None
-        while not response:
+ while not response:
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -102,9 +102,9 @@ class AI:
         # Wait for a little while if the API rate limit is exceeded
         await asyncio.sleep(0.5)
 
-    # Add the response to the conversation history
-    message = response.choices[0].message.content.strip()
-    self.convo_hist.append({"role": "assistant", "content": message})
-    self.total_tokens += len(message.encode("utf-8"))
+# Add the response to the conversation history
+message = response.choices[0].text.strip()
+self.convo_hist.append({"role": "assistant", "content": message})
+self.total_tokens += len(message.encode("utf-8"))
 
-    return message
+return message
