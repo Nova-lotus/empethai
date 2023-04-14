@@ -77,20 +77,19 @@ class AI:
             context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}] + list(self.convo_hist)
 
         # Generate a response using the conversation history or summary as the context
-        response = None 
-     while not response: 
-        try: 
-            response = openai.ChatCompletion.create( 
-                model="gpt-3.5-turbo", 
-                messages=context, 
-                max_tokens=350, 
-                n=1, 
-                stop=None, 
-                temperature=0.7, 
-            ) 
-        except openai.error.TooManyRequestsError: 
-            # Wait for a little while if the API rate limit is exceeded 
-            await asyncio.sleep(0.5)
+		response = None
+     while not response:
+		 try:
+		  response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=context,
+                    max_tokens=350,
+                    n=1,
+                    stop=None,
+                    temperature=0.7,
+                )
+	except openai.error.TooManyRequestsError: 
+	await asyncio.sleep(0.5)		
 
         # Add the response to the conversation history
         message = response.choices[0].message.content.strip()
