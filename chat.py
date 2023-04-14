@@ -30,9 +30,9 @@ class AI:
         # Add the special message to the conversation history
         self.convo_hist.append({"role": "system", "content": self.SPECIAL_MESSAGE})
         self.total_tokens += len(self.SPECIAL_MESSAGE.encode('utf-8'))
-	
-    async def async_sleep(duration):
-    await asyncio.sleep(duration)
+
+    async def async_sleep(self, duration):
+        await asyncio.sleep(duration)
 
     async def get_convo_hist_text(self, public=False):
         if public:
@@ -41,26 +41,26 @@ class AI:
             return "\n\n".join([msg['content'] for msg in self.convo_hist if msg['role'] != 'system'])
 
     async def run(self, user_id, prompt, public=False):
-    # Check if the conversation history has exceeded the token limit
-     while self.total_tokens >= 3996:
-        # If it has, remove the oldest messages until the total token count is below the limit
-        oldest_message = self.convo_hist.popleft()
-        self.total_tokens -= len(oldest_message["content"].encode('utf-8'))
+        # Check if the conversation history has exceeded the token limit
+        while self.total_tokens >= 3996:
+            # If it has, remove the oldest messages until the total token count is below the limit
+            oldest_message = self.convo_hist.popleft()
+            self.total_tokens -= len(oldest_message["content"].encode('utf-8'))
 
-        # If the oldest message is the special message, don't add it back to the deque
-        if oldest_message["content"] == self.SPECIAL_MESSAGE:
-            continue
+            # If the oldest message is the special message, don't add it back to the deque
+            if oldest_message["content"] == self.SPECIAL_MESSAGE:
+                continue
 
-    # Add the user's message to the conversation history
-    self.convo_hist.append({"role": "user", "content": prompt})
-    self.total_tokens += len(prompt.encode('utf-8'))
+        # Add the user's message to the conversation history
+        self.convo_hist.append({"role": "user", "content": prompt})
+        self.total_tokens += len(prompt.encode('utf-8'))
 
-    # If the conversation history is large enough, summarize it
-    if self.total_tokens >= 3900:
-        # Remove the special message from the conversation history if it's present
-        if self.convo_hist[0]["content"] == self.SPECIAL_MESSAGE:
-            self.convo_hist.popleft()
-            self.total_tokens -= len(self.SPECIAL_MESSAGE.encode('utf-8'))
+        # If the conversation history is large enough, summarize it
+        if self.total_tokens >= 3900:
+            # Remove the special message from the conversation history if it's present
+            if self.convo_hist[0]["content"] == self.SPECIAL_MESSAGE:
+                self.convo_hist.popleft()
+                self.total_tokens -= len(self.SPECIAL_MESSAGE.encode('utf-8'))
 
         # Create a summary of the conversation history using OpenAI's GPT-3 API
         summary_response = openai.ChatCompletion.create(
