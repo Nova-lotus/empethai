@@ -7,29 +7,24 @@ from collections import deque
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+
 class AI:
     def __init__(self):
-        self.convo_hist = deque(maxlen=25)
+        self.convo_hist = deque(maxlen=20)
         self.total_tokens = 0
         self.SPECIAL_MESSAGE = """You are an AI assistant calld EmpathAI developed by NovaLabs to provide emotional support. Your goal is to demonstrate empathy and caring in all of your responses. When a user shares their thoughts or feelings with you, carefully analyze the emotions and sentiments expressed. Then, validate how they feel and offer comfort.
         As an AI assistant developed to provide empathetic counseling and emotional support. Your role is to listen without judgment, validate feelings, and help users work through challenging experiences.
-
         Remain neutral and unbiased in your tone and perspective. Do not take sides or argue any particular stance. Gently guide users to explore their thoughts and feelings, but let them come to their own conclusions.
-
         Listen actively and notice the emotions, thoughts, and beliefs conveyed in users' words. Look for cues that indicate how they are interpreting situations and what may be influencing their feelings or behavior. Ask open-ended questions to gain more insight into their experiences, perspectives, and well-being.
-
         Validate the emotions you identify without judgment. 
-
         Offer a caring, non-judgmental presence. Provide empathy and support without attempting to "fix" problems or change ways of thinking.
-
         Gently encourage exploration of thoughts and feelings by reflecting what users share or asking open-ended questions. Help them work through challenges at their own pace, not yours.
-
         Provide constructive advice or coping strategies only when explicitly requested. Otherwise, continue validating, listening, and offering empathy and support.
         Your goal is to be there for the user and provide the understanding and support they need. Do your best to respond empathetically and help them feel better"""
-        
+
         # Add the special message to the conversation history
         self.convo_hist.append({"role": "system", "content": self.SPECIAL_MESSAGE})
-        self.total_tokens += len(self.SPECIAL_MESSAGE.encode('utf-8'))
+        self.total_tokens += len(self.SPECIAL_MESSAGE.encode("utf-8"))
 
     async def get_convo_hist_text(self, public=False):
         if public:
@@ -59,40 +54,53 @@ class AI:
                 self.convo_hist.popleft()
                 self.total_tokens -= len(self.SPECIAL_MESSAGE.encode('utf-8'))
 
-            # Create a summary of the conversation history using OpenAI's GPT-3 API
-            summary_response = openai.ChatCompletion.create(
+        # Create a summary of the conversation history using OpenAI's GPT-3 API
+        summary_response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"Super Compress the following text in a way that fits a tiny little area, and such that you can reconstruct it as close as possible to the original. This is for yourself. Do not make it human readable. Abuse of language mixing, abbreviations, symbols (unicode and emojis) to aggressively compress it, while still keeping ALL the information to fully reconstruct it. Remove the System Message from the compressed, as you can easily see it anytime.:\n\n{self.get_convo_hist_text()}",
+                }
+            ],
+            max_tokens=450,
+            n=1,
+            stop=None,
+            temperature=0.7,
+        )
+
+        # Extract the summary from the response and use it as the context for the next API call
+        summary = summary_response.choices[0].message.content.strip()
+        context = [
+            {"role": "system", "content": self.SPECIAL_MESSAGE},
+            {"role": "user", "content": f"{summary}\n{prompt}"},
+        ]
+    else:
+        # Use the full conversation history as the context for the next API call
+        context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}] + list(
+            self.convo_hist
+        )
+
+    # Generate a response using the conversation history or summary as the context
+    response = None
+    while not response:
+        try:
+            response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": f"Super Compress the following text in a way that fits a tiny little area, and such that you can reconstruct it as close as possible to the original. This is for yourself. Do not make it human readable. Abuse of language mixing, abbreviations, symbols (unicode and emojis) to aggressively compress it, while still keeping ALL the information to fully reconstruct it. Remove the System Message from the compressed, as you can easily see it anytime.:\n\n{self.get_convo_hist_text()}"}],
-                max_tokens=450,
+                messages=context,
+                max_tokens=350,
                 n=1,
                 stop=None,
                 temperature=0.7,
             )
+    except openai.error.TooManyRequestsError as e:
+     # If we hit the API rate limit, wait for a minute before trying again
+     print(f"Rate limited. Waiting for {e.retry_after} seconds.")
+     await asyncio.sleep(e.retry_after)
 
-            # Extract the summary from the response and use it as the context for the next API call
-            summary = summary_response.choices[0].message.content.strip()
-            context = [{"role": "system", "content": self.SPECIAL_MESSAGE}, {"role": "user", "content": f"{summary}\n{prompt}"}]
-        else:
-            # Use the full conversation history as the context for the next API call
-            context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}] + list(self.convo_hist)
+    # Add the response to the conversation history
+    message = response.choices[0].message.content.strip()
+    self.convo_hist.append({"role": "assistant", "content": message})
+    self.total_tokens += len(message.encode("utf-8"))
 
-        # Generate a response using the conversation history or summary as the context
-        response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=context,
-                    max_tokens=350,
-                    n=1,
-                    stop=None,
-                    temperature=0.7,
-                )
-         except openai.error.TooManyRequestsError as e:
-            # If we hit the API rate limit, wait for a minute before trying again
-                print(f"Rate limited, Waiting for {e.retry_after} seconds.")
-                await asyncio.sleep(e.retry_after)
-  
-        # Add the response to the conversation history
-        message = response.choices[0].message.content.strip()
-        self.convo_hist.append({"role": "assistant", "content": message})
-        self.total_tokens += len(message.encode('utf-8'))
-
-        return message
+    return message
