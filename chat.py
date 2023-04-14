@@ -85,7 +85,7 @@ class AI:
                     stop=None,
                     temperature=0.7,
                 )
-            except openai.error.TooManyRequestsError as e:
+         except openai.error.TooManyRequestsError as e:
             # If we hit the API rate limit, wait for a minute before trying again
                 print(f"Rate limited, Waiting for {e.retry_after} seconds.")
                 await asyncio.sleep(e.retry_after)
