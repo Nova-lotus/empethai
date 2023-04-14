@@ -62,22 +62,23 @@ class AI:
                 self.convo_hist.popleft()
                 self.total_tokens -= len(self.SPECIAL_MESSAGE.encode('utf-8'))
 
-        # Create a summary of the conversation history using OpenAI's GPT-3 API
-        summary_response = openai.ChatCompletion.create(
-					model="gpt-3.5-turbo",
-					messages=[{"role": "user", "content": f"Super Compress the following text in a way that fits a tiny little area, and such that you can reconstruct it as close as possible to the original. This is for yourself. Do not make it human readable. Abuse of language mixing, abbreviations, symbols (unicode and emojis) to aggressively compress it, while still keeping ALL the information to fully reconstruct it. Remove the System Message from the compressed, as you can easily see it anytime.:\n\n{self.get_convo_hist_text()}"}],
-					max_tokens=450,
-					n=1,
-					stop=None,
-					temperature=0.7,
-				)
+            # Create a summary of the conversation history using OpenAI's GPT-3 API
+            summary_response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": f"Super Compress the following text in a way that fits a tiny little area, and such that you can reconstruct it as close as possible to the original. This is for yourself. Do not make it human readable. Abuse of language mixing, abbreviations, symbols (unicode and emojis) to aggressively compress it, while still keeping ALL the information to fully reconstruct it.:\n\n{self.get_convo_hist_text()}"}],
+                max_tokens=450,
+                n=1,
+                stop=None,
+                temperature=0.7,
+            )
 
-        # Extract the summary from the response and use it as the context for the next API call
-        summary = summary_response.choices[0].message.content.strip()
-        context = [{"role": "system", "content": self.SPECIAL_MESSAGE}, {"role": "user", "content": f"{summary}\n{prompt}"}]
-    else:
-        # Use the full conversation history as the context for the next API call
-        context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}] + list(self.convo_hist)
+            # Extract the summary from the response and use it as the context for the next API call
+            summary = summary_response.choices[0].message.content.strip()
+            context = [{"role": "system", "content": self.SPECIAL_MESSAGE}, {"role": "user", "content": f"Summery of current conversation: {summary}\nCurrent prompt: {prompt}"}]
+        else:
+            # Use the full conversation history as the context for the next API call
+            self.convo_hist = deque(maxlen=20)
+			context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}] + list(self.convo_hist)
 
     # Generate a response using the conversation history or summary as the context
     response = None
