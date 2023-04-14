@@ -85,8 +85,6 @@ while not response:
             stop=None,
             temperature=0.7,
         )
-    except openai.error.TooManyRequestsError:
-        await asyncio.sleep(0.5)
 
 # Add the response to the conversation history
 message = response.choices[0].message.content.strip()
