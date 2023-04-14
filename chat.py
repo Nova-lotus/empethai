@@ -36,7 +36,7 @@ class AI:
                 [msg["content"] for msg in self.convo_hist if msg["role"] != "system"]
             )
 
-    async def run(self, user_id, prompt, public=False):
+async def run(self, user_id, prompt, public=False):
     # Check if the conversation history has exceeded the token limit
     while self.total_tokens >= 3996:
         # If it has, remove the oldest messages until the total token count is below the limit
