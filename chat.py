@@ -38,18 +38,19 @@ class AI:
 
     async def run(self, user_id, prompt, public=False):
         # Check if the conversation history has exceeded the token limit
-        while self.total_tokens >= 3996:
-            # If it has, remove the oldest messages until the total token count is below the limit
-            oldest_message = self.convo_hist.popleft()
-            self.total_tokens -= len(oldest_message["content"].encode("utf-8"))
+while self.total_tokens >= 3996:
+    # If it has, remove the oldest messages until the total token count is below the limit
+    oldest_message = self.convo_hist.popleft()
+    self.total_tokens -= len(oldest_message["content"].encode("utf-8"))
 
-            # If the oldest message is the special message, don't add it back to the deque
-            if oldest_message["content"] == self.SPECIAL_MESSAGE:
-                continue
+    # If the oldest message is the special message, don't add it back to the deque
+    if oldest_message["content"] == self.SPECIAL_MESSAGE:
+        continue
 
     # Add the user's message to the conversation history
     self.convo_hist.append({"role": "user", "content": prompt})
     self.total_tokens += len(prompt.encode("utf-8"))
+
 
     # If the conversation history is large enough, summarize it
     if self.total_tokens >= 3900:
