@@ -39,7 +39,7 @@ class AI:
 
     async def run(self, user_id, prompt, public=False):
     # Check if the conversation history has exceeded the token limit
-    while self.total_tokens >= 3996:
+     while self.total_tokens >= 3996:
         # If it has, remove the oldest messages until the total token count is below the limit
         oldest_message = self.convo_hist.popleft()
         self.total_tokens -= len(oldest_message["content"].encode('utf-8'))
