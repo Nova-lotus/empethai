@@ -75,28 +75,32 @@ class AI:
             {"role": "system", "content": self.SPECIAL_MESSAGE},
             {"role": "user", "content": f"{summary}\n{prompt}"},
         ]
-    else:
-        # Use the full conversation history as the context for the next API call
-        context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}] + list(
-            self.convo_hist
-        )
 
-    # Generate a response using the conversation history or summary as the context
-    response = None
-    while not response:
-        try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=context,
-                max_tokens=350,
-                n=1,
-                stop=None,
-                temperature=0.7,
+        if public:
+            # Only show the user's messages in the public chat log
+            context = [{"role": "user", "content": msg["content"]} for msg in self.convo_hist if msg["role"] == "user"]
+
+        else:
+            # Use the full conversation history as the context for the next API call
+            context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}] + list(
+                self.convo_hist
             )
-    except openai.error.TooManyRequestsError as e:
-     # If we hit the API rate limit, wait for a minute before trying again
-     print(f"Rate limited. Waiting for {e.retry_after} seconds.")
-     await asyncio.sleep(e.retry_after)
+
+        # Generate a response using the conversation history or summary as the context
+        response = None
+        while not response:
+            try:
+                response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=context,
+                    max_tokens=350,
+                    n=1,
+                    stop=None,
+                    temperature=0.7,
+                )
+            except openai.error.TooManyRequestsError:
+                # Wait for a little while if the API rate limit is exceeded
+                await asyncio.sleep(0.5)
 
     # Add the response to the conversation history
     message = response.choices[0].message.content.strip()
