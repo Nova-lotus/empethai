@@ -96,7 +96,7 @@ class AI:
 
         return message
     
-    async def send_request(self, **kwargs):
+async def send_request(self, **kwargs):
     while True:
         try:
             response = await asyncio.to_thread(openai.ChatCompletion.create, **kwargs)
