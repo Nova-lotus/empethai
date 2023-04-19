@@ -107,8 +107,3 @@ async def send_request(self, **kwargs):
             await asyncio.sleep(retry_after)
     self.last_request_time = time.monotonic()
     return response
-
-        # Update the last request time
-        self.last_request_time = time.monotonic()
-
-        return response
