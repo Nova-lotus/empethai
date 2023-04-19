@@ -103,7 +103,7 @@ class AI:
                 await asyncio.sleep(0.2 - elapsed_time)
 
         # Send the API request
-        response = await openai.ChatCompletion.create(**kwargs)
+        response = await asyncio.to_thread(openai.ChatCompletion.create, **kwargs)
 
         # Update the last request time
         self.last_request_time = time.monotonic()
