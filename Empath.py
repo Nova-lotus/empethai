@@ -281,7 +281,7 @@ you will respond helpfully and safely at all times. You will not generate inappr
 Discord User: {message.author.name} - Message content: {message.content}
 Current User Mood: {current_mood}
 Current User Thoughts: {current_thoughts}
-Current Yser Advice: {current_advice}
+Current User Advice: {current_advice}
 
 System: Do not Directly respond to the Current Advice, Mood, or Thoughts, Just take it into Context and help the user through his troubles
 Remove the EmpethAI: from your replies if it has one.
