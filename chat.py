@@ -26,6 +26,8 @@ class AI:
 
         Provide constructive advice or coping strategies only when explicitly requested. Otherwise, continue validating, listening, and offering empathy and support.
         Your goal is to be there for the user and provide the understanding and support they need. Do your best to respond empathetically and help them feel better"""
+
+        self.last_request_time = None
         
         # Add the special message to the conversation history
         self.convo_hist.append({"role": "system", "content": self.SPECIAL_MESSAGE})
@@ -60,7 +62,7 @@ class AI:
                 self.total_tokens -= len(self.SPECIAL_MESSAGE.encode('utf-8'))
 
             # Create a summary of the conversation history using OpenAI's GPT-3 API
-            summary_response = openai.ChatCompletion.create(
+            summary_response = await self.send_request(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": f"Super Compress the following text in a way that fits a tiny little area, and such that you can reconstruct it as close as possible to the original. This is for yourself. Do not make it human readable. Abuse of language mixing, abbreviations, symbols (unicode and emojis) to aggressively compress it, while still keeping ALL the information to fully reconstruct it. Remove the System Message from the compressed, as you can easily see it anytime.:\n\n{await self.get_convo_hist_text()}"}],
                 max_tokens=450,
@@ -77,14 +79,14 @@ class AI:
             context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}] + list(self.convo_hist)
 
         # Generate a response using the conversation history or summary as the context
-        response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=context,
-                    max_tokens=350,
-                    n=1,
-                    stop=None,
-                    temperature=0.7,
-                )
+        response = await self.send_request(
+            model="gpt-3.5-turbo",
+            messages=context,
+            max_tokens=350,
+            n=1,
+            stop=None,
+            temperature=0.7,
+        )
 
         # Add the response to the conversation history
         message = response.choices[0].message.content.strip()
@@ -92,3 +94,18 @@ class AI:
         self.total_tokens += len(message.encode('utf-8'))
 
         return message
+    
+    async def send_request(self, **kwargs):
+        # Wait for the required delay between requests
+        if self.last_request_time is not None:
+            elapsed_time = time.monotonic() - self.last_request_time
+            if elapsed_time < 0.2:
+                await asyncio.sleep(0.2 - elapsed_time)
+
+        # Send the API request
+        response = await openai.ChatCompletion.create(**kwargs)
+
+        # Update the last request time
+        self.last_request_time = time.monotonic()
+
+        return response
