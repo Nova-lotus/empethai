@@ -1,5 +1,6 @@
 import openai
 import os
+import time
 from dotenv import load_dotenv
 import asyncio
 from collections import deque
