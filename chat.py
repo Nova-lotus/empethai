@@ -108,9 +108,6 @@ async def send_request(self, **kwargs):
     self.last_request_time = time.monotonic()
     return response
 
-        # Send the API request
-        response = await asyncio.to_thread(openai.ChatCompletion.create, **kwargs)
-
         # Update the last request time
         self.last_request_time = time.monotonic()
 
