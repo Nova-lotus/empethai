@@ -8,16 +8,6 @@ from collections import deque
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-import openai
-import os
-import time
-from dotenv import load_dotenv
-import asyncio
-from collections import deque
-
-load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
 class AI:
     def __init__(self):
         self.convo_hist = deque(maxlen=20)
@@ -109,22 +99,14 @@ class AI:
     async def send_request(self, **kwargs):
         while True:
             try:
-                response = await asyncio.to_thread(openai.ChatCompletion.create, **kwargs)
-                break
-except openai.error.RateLimitError as e:
-
-    if 'seconds_to_wait' in e.http_body and isinstance(e.http_body['seconds_to_wait'], int):
-
-        retry_after = e.http_body['seconds_to_wait']
-
-        print(f"Rate limit reached. Retrying in {retry_after} seconds...")
-
-        await asyncio.sleep(retry_after)
-
-    else:
-
-        print(f"Rate limit reached, but unable to determine retry time. Waiting 60 seconds...")
-
-        await asyncio.sleep(60)
-        self.last_request_time = time.monotonic()
-        return response
+                response = openai.Completion.create(**kwargs)
+                self.last_request_time = time.time()
+                return response
+            except openai.error.RateLimitError as e:
+                # If we hit the rate limit, wait until it resets before trying again
+                reset_time = int(e.reset - time.time())
+                print(f"Rate limit hit. Waiting {reset_time} seconds before trying again.")
+                await asyncio.sleep(reset_time)
+            except Exception as e:
+                print(f"Error: {e}")
+                return None
