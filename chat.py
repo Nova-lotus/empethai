@@ -4,7 +4,6 @@ import time
 from dotenv import load_dotenv
 import asyncio
 from collections import deque
-import json
 
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -65,15 +64,15 @@ class AI:
 
             # Create a summary of the conversation history using OpenAI's GPT-3 API
             summary_response = await self.send_request(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": f"Super Compress the following text in a way that fits a tiny little area, and such that you can reconstruct it as close as possible to the original. This is for yourself. Do not make it human readable. Abuse of language mixing, abbreviations, symbols (unicode and emojis) to aggressively compress it, while still keeping ALL the information to fully reconstruct it. Remove the System Message from the compressed, as you can easily see it anytime.:\n\n{await self.get_convo_hist_text()}"}],
-            max_tokens=450,
-            n=1,
-            stop=None,
-            temperature=0.7,
-        )
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": f"Super Compress the following text in a way that fits a tiny little area, and such that you can reconstruct it as close as possible to the original. This is for yourself. Do not make it human readable. Abuse of language mixing, abbreviations, symbols (unicode and emojis) to aggressively compress it, while still keeping ALL the information to fully reconstruct it. Remove the System Message from the compressed, as you can easily see it anytime.:\n\n{await self.get_convo_hist_text()}"}],
+                max_tokens=450,
+                n=1,
+                stop=None,
+                temperature=0.7,
+            )
 
-        # Extract the summary from the response and use it as the context for the next API call
+            # Extract the summary from the response and use it as the context for the next API call
             summary = summary_response.choices[0].message.content.strip()
             context = [{"role": "system", "content": self.SPECIAL_MESSAGE}, {"role": "user", "content": f"{summary}\n{prompt}"}]
         else:
@@ -82,15 +81,15 @@ class AI:
 
         # Generate a response using the conversation history or summary as the context
         response = await self.send_request(
-        model="gpt-3.5-turbo",
-        messages=context,
-        max_tokens=350,
-        n=1,
-        stop=None,
-        temperature=0.7,
-    )
+            model="gpt-3.5-turbo",
+            messages=context,
+            max_tokens=350,
+            n=1,
+            stop=None,
+            temperature=0.7,
+        )
 
-    # Add the response to the conversation history
+        # Add the response to the conversation history
         message = response.choices[0].message.content.strip()
         self.convo_hist.append({"role": "assistant", "content": message})
         self.total_tokens += len(message.encode('utf-8'))
@@ -108,3 +107,4 @@ class AI:
                 await asyncio.sleep(retry_after)
         self.last_request_time = time.monotonic()
         return response
+
