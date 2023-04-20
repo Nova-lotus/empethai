@@ -99,14 +99,11 @@ class AI:
     async def send_request(self, **kwargs):
         while True:
             try:
-                response = openai.Completion.create(**kwargs)
-                self.last_request_time = time.time()
-                return response
+                response = await asyncio.to_thread(openai.ChatCompletion.create, **kwargs)
+                break
             except openai.error.RateLimitError as e:
-                # If we hit the rate limit, wait until it resets before trying again
-                reset_time = int(e.reset - time.time())
-                print(f"Rate limit hit. Waiting {reset_time} seconds before trying again.")
-                await asyncio.sleep(reset_time)
-            except Exception as e:
-                print(f"Error: {e}")
-                return None
+                retry_after = int(e.http_body['20'])
+                print(f"Rate limit reached. Retrying in {retry_after} seconds...")
+                await asyncio.sleep(retry_after)
+        self.last_request_time = time.monotonic()
+        return response
