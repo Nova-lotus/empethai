@@ -111,9 +111,20 @@ class AI:
             try:
                 response = await asyncio.to_thread(openai.ChatCompletion.create, **kwargs)
                 break
-            except openai.error.RateLimitError as e:
-                retry_after = int(e.http_body['seconds_to_wait'])
-                print(f"Rate limit reached. Retrying in {retry_after} seconds...")
-                await asyncio.sleep(retry_after)
+except openai.error.RateLimitError as e:
+
+    if 'seconds_to_wait' in e.http_body and isinstance(e.http_body['seconds_to_wait'], int):
+
+        retry_after = e.http_body['seconds_to_wait']
+
+        print(f"Rate limit reached. Retrying in {retry_after} seconds...")
+
+        await asyncio.sleep(retry_after)
+
+    else:
+
+        print(f"Rate limit reached, but unable to determine retry time. Waiting 60 seconds...")
+
+        await asyncio.sleep(60)
         self.last_request_time = time.monotonic()
         return response
