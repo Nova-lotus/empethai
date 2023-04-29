@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "description": "A project for analyzing emotions in text",
   "scripts": {
-    "build": "echo \"No build specified\" && exit 1",
-    "test": "echo \"No test specified\" && exit 1",
-    "start": "node index.js"
+    "build": "pip install -r requirements.txt,
+    "start": "Empethai.py"
   },
   "repository": {
     "type": "git",
