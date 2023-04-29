@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A project for analyzing emotions in text",
   "scripts": {
-    "build": "pip install -r requirements.txt,
+    "build": "pip install -r requirements.txt",
     "start": "Empethai.py"
   },
   "repository": {
