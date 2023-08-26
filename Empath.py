@@ -223,7 +223,8 @@ async def report(interaction: discord.Interaction):
     await bot.get_channel(channel_id).send(f"Report from {interaction.user}: {message.content}")
     await interaction.response.delete()
 
-# Function to create a private channel
+
+
 @bot.tree.command(name="private", description="Create a private channel for you and the bot")
 async def private(interaction: discord.Interaction):
     category = bot.get_channel(category_id)
@@ -246,6 +247,7 @@ async def private(interaction: discord.Interaction):
 
     # Create a new AI instance for the channel
     chatbot[channel.id] = AI()
+
 
 @bot.event
 async def on_message(message):
@@ -312,4 +314,5 @@ async def on_ready():
             del reminders[user_id]
         await asyncio.sleep(60)
 
+# Function to run the bot
 bot.run(token)
