@@ -112,6 +112,7 @@ async def set_reminder(interaction: discord.Interaction, message: str, weeks: in
 
     await interaction.followup.send(response, ephemeral=True)
 
+# Function to run reminder
 async def run_reminder(user_id: int, reminder_text: str):
     user = await bot.fetch_user(user_id)
     chatbot[user_id] = AI()
@@ -127,7 +128,6 @@ async def run_reminder(user_id: int, reminder_text: str):
     """)
     await user.send(response)
     del reminders[user_id]
-	
 
 @bot.tree.command(name="cancelreminder")
 async def cancel_reminder(interaction: discord.Interaction):
