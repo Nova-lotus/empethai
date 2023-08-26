@@ -8,13 +8,14 @@ from collections import deque
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Class to handle AI interactions
 class AI:
     def __init__(self):
         self.convo_hist = deque(maxlen=20)
         self.total_tokens = 0
         self.SPECIAL_MESSAGE = """You are an AI assistant calld Empethai.
         Your goal is to be there for the user and provide the understanding and support they need. Do your best to respond empathtically and help them feel better"""
-        
+
         # Add the special message to the conversation history
         self.convo_hist.append({"role": "system", "content": self.SPECIAL_MESSAGE})
         self.total_tokens += len(self.SPECIAL_MESSAGE.encode('utf-8'))
