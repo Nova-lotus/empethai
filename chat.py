@@ -65,7 +65,7 @@ class AI:
             # Use the full conversation history as the context for the next API call
             context = [{"role": "assistant", "content": self.SPECIAL_MESSAGE}] + list(self.convo_hist)
 
-        # Generate a response using the conversation history or summary as the context
+        # Function to generate a response using the conversation history or summary as the context
         response = await openai.ChatCompletion.acreate(
                     model="gpt-3.5-turbo",
                     messages=context,
