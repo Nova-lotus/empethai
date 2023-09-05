@@ -8,6 +8,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import os
 import random
 from discord.ext import tasks
+from database import Database
 load_dotenv()
 
 chatbot = {}
@@ -22,6 +23,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 category_id = 1092547772252700773
 channel_id = 1092513860495347763
 
+db = Database()
 
 current_mood = ""
 reminders = {}
@@ -42,7 +44,7 @@ async def report_mood(interaction: discord.Interaction, mood: str):
 
     current_mood = mood
 
-    mood_tracker.setdefault(interaction.user.id, []).append(current_mood)
+    db.insert_mood(interaction.user.id, current_mood)
 
     await interaction.response.send_message(f"Thank you for sharing your mood with me! You can now talk to the bot about {current_mood} and it will have that in context.", ephemeral=True)
 
@@ -50,12 +52,12 @@ async def report_mood(interaction: discord.Interaction, mood: str):
 
 @bot.tree.command(name="moodtracking", description="Track all your previous moods.")
 async def view_moods(interaction: discord.Interaction):
-    try:
-        moods = mood_tracker[interaction.user.id]
+    moods = db.get_moods(interaction.user.id)
+    if moods:
         message = "Moods Reported:\n"
-        for i, mood in enumerate(reversed(moods)):
+        for i, (mood, timestamp) in enumerate(reversed(moods)):
             message += f"• {mood} (reported {i+1} {'day' if i==0 else 'days' if i<7 else 'weeks'} ago)\n"
-    except KeyError:
+    else:
         message = "No mood reported yet"
     await interaction.response.send_message(message, ephemeral=True)
 
@@ -91,13 +93,7 @@ async def set_reminder(interaction: discord.Interaction, message: str, weeks: in
     remind_me_total_minutes = weeks * 7 * 24 * 60 + days * 24 * 60 + minutes
     remind_me_at = datetime.utcnow() + timedelta(minutes=remind_me_total_minutes)
 
-    reminders[interaction.user.id] = {
-    'user_id': interaction.user.id,
-    'reminder_text': message,
-    'remind_me': remind_me_total_minutes,
-    'remind_me_at': remind_me_at,
-}
-
+    db.insert_reminder(interaction.user.id, message, remind_me_total_minutes, remind_me_at)
 
     response = await chatbot[interaction.user.id].run(user_id=interaction.user.id, prompt=f"""
         Instructions: An AI assistant called EmpathAI developed by NovaLabs to provide helpful reminders and encourage your progress.
@@ -132,7 +128,7 @@ async def run_reminder(user_id: int, reminder_text: str):
 @bot.tree.command(name="cancelreminder")
 async def cancel_reminder(interaction: discord.Interaction):
     user_id = interaction.user.id
-    user_reminders = [(i, r) for i, r in enumerate(reminders.values()) if r.get('user_id') == user_id]
+    user_reminders = db.get_reminders(user_id)
 
     if not user_reminders:
         await interaction.response.send_message("You don't have any reminders to cancel.", ephemeral=True)
@@ -183,8 +179,7 @@ async def cancel_reminder(interaction: discord.Interaction):
             await interaction.followup.send("Invalid reminder number.", ephemeral=True)
         else:
             reminder_index = user_reminders[reminder_number - 1][0]
-            reminder_id = list(reminders.keys())[reminder_index]
-            del reminders[reminder_id]
+            db.delete_reminder(user_id, reminder_index)
             await interaction.followup.send("Reminder cancelled.", ephemeral=True)
     except asyncio.TimeoutError:
         await interaction.followup.send("Cancelled reminder cancellation.", ephemeral=True)
@@ -290,6 +285,9 @@ Remove the EmpethAI: from your replies if it has one.
     # Add the user's message to the AI instance's conversation history
     ai.convo_hist.append({"role": "user", "content": message.content})
     ai.total_tokens += len(message.content.encode('utf-8'))
+
+    # Store the conversation history in the database
+    db.insert_convo(message.author.id, "user", message.content)
 
     # Send the response to the user
     await typing_message.delete()
