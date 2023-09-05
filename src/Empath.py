@@ -113,3 +113,4 @@ Remove the EmpethAI: from your replies if it has one.
     await message.reply(response)
 
 # ... existing code ...
+</merged_file>
