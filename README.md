@@ -23,11 +23,13 @@ EmpathAI is a Discord bot developed by NovaLabs. It is designed to provide ethic
 
 ## Code Structure
 
-The codebase is divided into two main files: `Empath.py` and `chat.py`.
+The codebase is divided into three main files: `Empath.py`, `chat.py`, and `database.py`.
 
 - `Empath.py` handles the Discord bot functionality. It includes commands for mood tracking, setting reminders, sharing thoughts, requesting advice, and creating private channels. It also handles events such as messages and bot readiness.
 
 - `chat.py` handles the AI interactions. It uses OpenAI's GPT-3 model to generate responses to user messages. The AI keeps track of the conversation history and uses it to generate contextually appropriate responses.
+
+- `database.py` handles the database interactions. It provides functions to insert, retrieve, and delete data related to moods, reminders, and conversation history.
 
 ## Future Improvements
 - Implement a database to persistently store user data such as moods, reminders, and conversation history.
