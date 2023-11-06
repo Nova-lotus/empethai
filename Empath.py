@@ -20,8 +20,8 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-category_id = 1092547772252700773
-channel_id = 1092513860495347763
+category_id = 1171131813360582799
+channel_id = 1171131813360582801
 
 db = Database()
 
@@ -296,7 +296,7 @@ Remove the EmpethAI: from your replies if it has one.
 @bot.event
 async def on_ready():
     print(f'Logged into Discord as {bot.user}')
-    guild = discord.Object(id=1090953112363208746)
+    guild = discord.Object(id=1171131812744015892)
     bot.tree.copy_global_to(guild=guild)
     await bot.tree.sync(guild=guild)
     activity = discord.Activity(type=discord.ActivityType.listening, name="Any Help")
